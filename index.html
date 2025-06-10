@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XPath Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-family: monospace;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .result-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .copy-button {
+            padding: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            height: fit-content;
+        }
+        .copy-button:hover {
+            background-color: #1976D2;
+        }
+        .copy-button.copied {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>XPath Converter</h1>
+        <div>
+            <h3>Browser XPath:</h3>
+            <textarea id="browserXPath" placeholder="Paste browser XPath here..." onkeydown="handleKeyPress(event)"></textarea>
+        </div>
+        <button onclick="convertXPath()">Convert to HtmlAgilityPack Format</button>
+        <div>
+            <h3>HtmlAgilityPack XPath:</h3>
+            <div class="result-container">
+                <div id="result" class="result"></div>
+                <button id="copyButton" class="copy-button" onclick="copyToClipboard()" style="display: none;">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                convertXPath();
+            }
+        }
+
+        function convertXPath() {
+            const browserXPath = document.getElementById('browserXPath').value.trim();
+            const result = document.getElementById('result');
+            const copyButton = document.getElementById('copyButton');
+            
+            if (!browserXPath) {
+                result.textContent = 'Please enter a XPath';
+                copyButton.style.display = 'none';
+                return;
+            }
+
+            try {
+                // Split the XPath into segments
+                const segments = browserXPath.split('/').filter(segment => segment);
+                
+                // Process each segment
+                const normalizedSegments = segments.map(segment => {
+                    // If segment already has an index, keep it
+                    if (segment.includes('[')) {
+                        return segment;
+                    }
+                    // Otherwise add [1]
+                    return `${segment}[1]`;
+                });
+                
+                // Rejoin with leading slash
+                const htmlAgilityPackXPath = '/' + normalizedSegments.join('/');
+                
+                result.textContent = htmlAgilityPackXPath;
+                copyButton.style.display = 'block';
+            } catch (error) {
+                result.textContent = 'Error converting XPath: ' + error.message;
+                copyButton.style.display = 'none';
+            }
+        }
+
+        function copyToClipboard() {
+            const result = document.getElementById('result');
+            const copyButton = document.getElementById('copyButton');
+            
+            navigator.clipboard.writeText(result.textContent).then(() => {
+                copyButton.textContent = 'Copied!';
+                copyButton.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                    copyButton.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
